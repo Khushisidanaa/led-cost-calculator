@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Cost Calculator</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <h1 class="app-title" onclick="goToHome()" style="cursor: pointer">
+            <i class="fas fa-calculator"></i>
+            Product Cost Calculator
+          </h1>
+          <button class="admin-btn" onclick="toggleAdminPanel()">
+            <i class="fas fa-cog"></i>
+            <span class="admin-text">Admin</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Admin Panel -->
+        <div class="admin-panel" id="adminPanel">
+          <div class="admin-header">
+            <h2><i class="fas fa-tools"></i> Admin Panel - Parts Management</h2>
+            <button class="close-admin" onclick="toggleAdminPanel()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <div class="admin-tabs">
+            <button class="tab-btn active" onclick="switchTab('components')">
+              Components
+            </button>
+            <button class="tab-btn" onclick="switchTab('materialCosts')">
+              Material Costs
+            </button>
+          </div>
+
+          <!-- Components Tab -->
+          <div class="tab-content active" id="componentsTab">
+            <div class="add-component-section">
+              <h3>Add New Component</h3>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="category">Category</label>
+                  <select
+                    id="category"
+                    required
+                    onchange="validateAddComponentForm()"
+                  >
+                    <option value="">Select category</option>
+                    <option value="7-Segment PCBs">7-Segment PCBs</option>
+                    <option value="Power Supply">Power Supply</option>
+                    <option value="Controller">Controller</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Packaging">Packaging</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="componentName">Component Name</label>
+                  <input
+                    type="text"
+                    id="componentName"
+                    placeholder="e.g., High-Brightness Blue LED"
+                    required
+                    oninput="validateAddComponentForm()"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="description">Description</label>
+                  <textarea
+                    id="description"
+                    placeholder="Component details"
+                    required
+                  ></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="unitPrice">Unit Price (₹)</label>
+                  <input
+                    type="number"
+                    id="unitPrice"
+                    step="0.01"
+                    min="0"
+                    value="0"
+                    required
+                    oninput="validateAddComponentForm()"
+                  />
+                </div>
+              </div>
+              <div class="form-actions">
+                <button
+                  class="btn btn-primary"
+                  id="addComponentBtn"
+                  onclick="addComponent()"
+                  disabled
+                >
+                  <i class="fas fa-plus"></i> Add Component
+                </button>
+                <button
+                  class="btn btn-secondary"
+                  onclick="clearComponentForm()"
+                >
+                  <i class="fas fa-undo"></i> Clear
+                </button>
+              </div>
+            </div>
+
+            <!-- Edit Component Section (Hidden by default) -->
+            <div
+              class="edit-component-section"
+              id="editComponentSection"
+              style="display: none"
+            >
+              <div class="section-header">
+                <h3>Edit Component</h3>
+                <button class="btn btn-secondary" onclick="cancelEdit()">
+                  <i class="fas fa-times"></i> Cancel
+                </button>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="editCategory">Category</label>
+                  <select id="editCategory" required>
+                    <option value="">Select category</option>
+                    <option value="7-Segment PCBs">7-Segment PCBs</option>
+                    <option value="Power Supply">Power Supply</option>
+                    <option value="Controller">Controller</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Packaging">Packaging</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="editComponentName">Component Name</label>
+                  <input
+                    type="text"
+                    id="editComponentName"
+                    placeholder="e.g., High-Brightness Blue LED"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="editDescription">Description</label>
+                  <textarea
+                    id="editDescription"
+                    placeholder="Component details"
+                    required
+                  ></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="editUnitPrice">Unit Price (₹)</label>
+                  <input
+                    type="number"
+                    id="editUnitPrice"
+                    step="0.01"
+                    min="0"
+                    value="0"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-success" onclick="updateComponent()">
+                  <i class="fas fa-save"></i> Update Component
+                </button>
+                <button class="btn btn-secondary" onclick="cancelEdit()">
+                  <i class="fas fa-times"></i> Cancel
+                </button>
+              </div>
+            </div>
+
+            <div class="components-list-section">
+              <div class="list-header">
+                <h3>Components (<span id="componentCount">0</span>)</h3>
+                <div class="filter-controls">
+                  <i class="fas fa-filter"></i>
+                  <select id="categoryFilter" onchange="filterComponents()">
+                    <option value="">All Categories</option>
+                    <option value="7-Segment PCBs">7-Segment PCBs</option>
+                    <option value="Power Supply">Power Supply</option>
+                    <option value="Controller">Controller</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Packaging">Packaging</option>
+                  </select>
+                </div>
+              </div>
+              <div class="components-list" id="componentsList">
+                <!-- Components will be populated here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Material Costs Tab -->
+          <div class="tab-content" id="materialCostsTab">
+            <h3>Material Costs</h3>
+            <p class="cost-description">
+              These costs are used to calculate custom cabinet pricing based on
+              dimensions.
+            </p>
+
+            <div class="material-costs-form">
+              <div class="cost-item">
+                <div class="cost-item-header">
+                  <label>ACP Sheet (square foot)</label>
+                  <div class="price-input">
+                    <span class="currency">₹</span>
+                    <input
+                      type="number"
+                      id="acpSheetCost"
+                      step="1"
+                      min="0"
+                      value="9"
+                      onchange="updateMaterialCosts()"
+                    />
+                  </div>
+                </div>
+                <small>Aluminum Composite Panel for display surfaces</small>
+              </div>
+
+              <div class="cost-item">
+                <div class="cost-item-header">
+                  <label>Acrylic Sheet (square foot)</label>
+                  <div class="price-input">
+                    <span class="currency">₹</span>
+                    <input
+                      type="number"
+                      id="acrylicSheetCost"
+                      step="1"
+                      min="0"
+                      value="15"
+                      onchange="updateMaterialCosts()"
+                    />
+                  </div>
+                </div>
+                <small>Clear acrylic for protective covering</small>
+              </div>
+
+              <div class="cost-item">
+                <div class="cost-item-header">
+                  <label>Printed Vinyl (square foot)</label>
+                  <div class="price-input">
+                    <span class="currency">₹</span>
+                    <input
+                      type="number"
+                      id="printedVinylCost"
+                      step="1"
+                      min="0"
+                      value="8"
+                      onchange="updateMaterialCosts()"
+                    />
+                  </div>
+                </div>
+                <small>Vinyl graphics and decorative elements</small>
+              </div>
+
+              <div class="cost-item">
+                <div class="cost-item-header">
+                  <label>Aluminum (linear foot)</label>
+                  <div class="price-input">
+                    <span class="currency">₹</span>
+                    <input
+                      type="number"
+                      id="aluminumCost"
+                      step="1"
+                      min="0"
+                      value="13"
+                      onchange="updateMaterialCosts()"
+                    />
+                  </div>
+                </div>
+                <small>Used for frame structure</small>
+              </div>
+
+              <div class="cost-item">
+                <div class="cost-item-header">
+                  <label>Hardware (fixed)</label>
+                  <div class="price-input">
+                    <span class="currency">₹</span>
+                    <input
+                      type="number"
+                      id="hardwareCost"
+                      step="1"
+                      min="0"
+                      value="45"
+                      onchange="updateMaterialCosts()"
+                    />
+                  </div>
+                </div>
+                <small>Fixed cost for screws, hinges, etc.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Calculator - Home Page -->
+        <div class="calculator-main" id="calculatorMain">
+          <!-- Configuration Progress -->
+          <div class="progress-section">
+            <h2>Configuration Progress</h2>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text">
+              <span id="progressStep">Step 1 of 6</span>
+              <span id="progressPercent">17%</span>
+            </div>
+            <div class="progress-categories">
+              <div class="category-step active" data-step="pcbs">
+                <i class="fas fa-microchip"></i>
+                <span>PCBs</span>
+              </div>
+              <div class="category-step" data-step="power">
+                <i class="fas fa-bolt"></i>
+                <span>Power</span>
+              </div>
+              <div class="category-step" data-step="controller">
+                <i class="fas fa-gamepad"></i>
+                <span>Controller</span>
+              </div>
+              <div class="category-step" data-step="cabinet">
+                <i class="fas fa-box"></i>
+                <span>Cabinet</span>
+              </div>
+              <div class="category-step" data-step="accessories">
+                <i class="fas fa-tools"></i>
+                <span>Accessories</span>
+              </div>
+              <div class="category-step" data-step="packaging">
+                <i class="fas fa-shipping-fast"></i>
+                <span>Packaging</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- All Configuration Sections Visible at Once -->
+          <div class="config-sections">
+            <!-- PCBs Section -->
+            <div class="config-section" id="pcbsSection">
+              <div class="section-header">
+                <h3><i class="fas fa-microchip"></i> 7-Segment Digit PCBs</h3>
+                <button
+                  class="btn btn-outline-primary"
+                  onclick="showAddComponentModal('7-Segment PCBs')"
+                >
+                  <i class="fas fa-plus"></i> Add New PCB
+                </button>
+              </div>
+
+              <!-- Add PCB Component Form (Always visible) -->
+              <div class="add-component-form" id="pcbComponentForm">
+                <h4>Add PCB Component</h4>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Select PCB</label>
+                    <select id="pcbSelect" onchange="updatePCBPrice()">
+                      <option value="">Choose a PCB type...</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Quantity</label>
+                    <input
+                      type="number"
+                      id="pcbQuantity"
+                      min="1"
+                      value="1"
+                      onchange="updatePCBPrice()"
+                    />
+                  </div>
+                  <button
+                    class="btn btn-primary"
+                    onclick="addPCB()"
+                    id="addPcbBtn"
+                    disabled
+                  >
+                    <i class="fas fa-plus"></i> Add PCB
+                  </button>
+                </div>
+              </div>
+
+              <div
+                class="selected-components"
+                id="selectedPCBs"
+                style="display: none"
+              >
+                <h4>Selected PCBs</h4>
+                <div class="components-list">
+                  <!-- Selected PCBs will appear here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Power Supply Section -->
+            <div class="config-section" id="powerSection">
+              <div class="section-header">
+                <h3><i class="fas fa-bolt"></i> Power Supply</h3>
+                <button
+                  class="btn btn-outline-primary"
+                  onclick="showAddComponentModal('Power Supply')"
+                >
+                  <i class="fas fa-plus"></i> Add New Power Supply
+                </button>
+              </div>
+
+              <!-- Add Power Supply Component Form (Always visible) -->
+              <div class="add-component-form" id="powerComponentForm">
+                <h4>Add Power Supply Component</h4>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Select Power Supply</label>
+                    <select id="powerSelect" onchange="updatePowerPrice()">
+                      <option value="">Choose a power supply...</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Quantity</label>
+                    <input
+                      type="number"
+                      id="powerQuantity"
+                      min="1"
+                      value="1"
+                      onchange="updatePowerPrice()"
+                    />
+                  </div>
+                  <button
+                    class="btn btn-primary"
+                    onclick="addPowerSupply()"
+                    id="addPowerBtn"
+                    disabled
+                  >
+                    <i class="fas fa-plus"></i> Add Supply
+                  </button>
+                </div>
+              </div>
+
+              <div
+                class="selected-components"
+                id="selectedPower"
+                style="display: none"
+              >
+                <h4>Selected Power Supplies</h4>
+                <div class="components-list">
+                  <!-- Selected power supplies will appear here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Controller Section -->
+            <div class="config-section" id="controllerSection">
+              <div class="section-header">
+                <h3><i class="fas fa-gamepad"></i> Controller</h3>
+                <button
+                  class="btn btn-outline-primary"
+                  onclick="showAddComponentModal('Controller')"
+                >
+                  <i class="fas fa-plus"></i> Add New Controller
+                </button>
+              </div>
+
+              <!-- Add Controller Component Form (Always visible) -->
+              <div class="add-component-form" id="controllerComponentForm">
+                <h4>Add Controller Component</h4>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Select Controller</label>
+                    <select
+                      id="controllerSelect"
+                      onchange="updateControllerPrice()"
+                    >
+                      <option value="">Choose a controller...</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Quantity</label>
+                    <input
+                      type="number"
+                      id="controllerQuantity"
+                      min="1"
+                      value="1"
+                      onchange="updateControllerPrice()"
+                    />
+                  </div>
+                  <button
+                    class="btn btn-primary"
+                    onclick="addController()"
+                    id="addControllerBtn"
+                    disabled
+                  >
+                    <i class="fas fa-plus"></i> Add Controller
+                  </button>
+                </div>
+              </div>
+
+              <div
+                class="selected-components"
+                id="selectedController"
+                style="display: none"
+              >
+                <h4>Selected Controllers</h4>
+                <div class="components-list">
+                  <!-- Selected controllers will appear here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Cabinet Section -->
+            <div class="config-section" id="cabinetSection">
+              <h3><i class="fas fa-box"></i> Custom Cabinet Dimensions</h3>
+              <div class="cabinet-dimensions">
+                <div class="dimension-inputs">
+                  <div class="form-group">
+                    <label>Height (inches)</label>
+                    <input
+                      type="number"
+                      id="cabinetHeight"
+                      min="1"
+                      step="0.1"
+                      value="24"
+                      onchange="calculateCabinetCost()"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Width (inches)</label>
+                    <input
+                      type="number"
+                      id="cabinetWidth"
+                      min="1"
+                      step="0.1"
+                      value="12"
+                      onchange="calculateCabinetCost()"
+                    />
+                  </div>
+                </div>
+                <div class="cabinet-cost-breakdown" id="cabinetCostBreakdown">
+                  <!-- Cabinet cost breakdown will appear here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Accessories Section -->
+            <div class="config-section" id="accessoriesSection">
+              <div class="section-header">
+                <h3><i class="fas fa-tools"></i> Accessories</h3>
+                <button
+                  class="btn btn-outline-primary"
+                  onclick="showAddComponentModal('Accessories')"
+                >
+                  <i class="fas fa-plus"></i> Add New Accessory
+                </button>
+              </div>
+
+              <!-- Add Accessory Component Form (Always visible) -->
+              <div class="add-component-form" id="accessoryComponentForm">
+                <h4>Add Accessory Component</h4>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Select Accessory</label>
+                    <select
+                      id="accessorySelect"
+                      onchange="updateAccessoryPrice()"
+                    >
+                      <option value="">Choose an accessory...</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Quantity</label>
+                    <input
+                      type="number"
+                      id="accessoryQuantity"
+                      min="1"
+                      value="1"
+                      onchange="updateAccessoryPrice()"
+                    />
+                  </div>
+                  <button
+                    class="btn btn-primary"
+                    onclick="addAccessory()"
+                    id="addAccessoryBtn"
+                    disabled
+                  >
+                    <i class="fas fa-plus"></i> Add Accessory
+                  </button>
+                </div>
+              </div>
+
+              <div
+                class="selected-components"
+                id="selectedAccessories"
+                style="display: none"
+              >
+                <h4>Selected Accessories</h4>
+                <div class="components-list">
+                  <!-- Selected accessories will appear here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Packaging Section -->
+            <div class="config-section" id="packagingSection">
+              <div class="section-header">
+                <h3><i class="fas fa-shipping-fast"></i> Packaging Options</h3>
+                <button
+                  class="btn btn-outline-primary"
+                  onclick="showAddComponentModal('Packaging')"
+                >
+                  <i class="fas fa-plus"></i> Add New Packaging
+                </button>
+              </div>
+
+              <!-- Add Packaging Component Form (Always visible) -->
+              <div class="add-component-form" id="packagingComponentForm">
+                <h4>Add Packaging Component</h4>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Select Packaging</label>
+                    <select
+                      id="packagingSelect"
+                      onchange="updatePackagingPrice()"
+                    >
+                      <option value="">Choose packaging...</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Quantity</label>
+                    <input
+                      type="number"
+                      id="packagingQuantity"
+                      min="1"
+                      value="1"
+                      onchange="updatePackagingPrice()"
+                    />
+                  </div>
+                  <button
+                    class="btn btn-primary"
+                    onclick="addPackaging()"
+                    id="addPackagingBtn"
+                    disabled
+                  >
+                    <i class="fas fa-plus"></i> Add Packaging
+                  </button>
+                </div>
+              </div>
+
+              <div
+                class="selected-components"
+                id="selectedPackaging"
+                style="display: none"
+              >
+                <h4>Selected Packaging</h4>
+                <div class="components-list">
+                  <!-- Selected packaging will appear here -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cost Breakdown -->
+          <div class="cost-breakdown">
+            <h3>Cost Breakdown</h3>
+            <div class="cost-items">
+              <div class="cost-item">
+                <span>PCBs:</span>
+                <span id="pcbsCost">₹0.00</span>
+              </div>
+              <div class="cost-item">
+                <span>Power Supply:</span>
+                <span id="powerCost">₹0.00</span>
+              </div>
+              <div class="cost-item">
+                <span>Controller:</span>
+                <span id="controllerCost">₹0.00</span>
+              </div>
+              <div class="cost-item">
+                <span>Custom Cabinet:</span>
+                <span id="cabinetCost">₹0.00</span>
+              </div>
+              <div class="cost-item">
+                <span>Accessories:</span>
+                <span id="accessoriesCost">₹0.00</span>
+              </div>
+              <div class="cost-item">
+                <span>Packaging:</span>
+                <span id="packagingCost">₹0.00</span>
+              </div>
+            </div>
+            <div class="cost-totals">
+              <div class="cost-item subtotal">
+                <span>Subtotal:</span>
+                <span id="subtotal">₹0.00</span>
+              </div>
+              <div class="cost-item tax">
+                <span>Tax (8.5%):</span>
+                <span id="taxAmount">₹0.00</span>
+              </div>
+              <div class="cost-item total">
+                <span>Total:</span>
+                <span id="totalAmount">₹0.00</span>
+              </div>
+            </div>
+            <div class="final-actions">
+              <button class="btn btn-success" onclick="generateQuote()">
+                <i class="fas fa-file-invoice"></i> Generate Quote
+              </button>
+              <button class="btn btn-secondary" onclick="saveEstimate()">
+                <i class="fas fa-save"></i> Save Estimate
+              </button>
+              <button class="btn btn-danger" onclick="resetConfiguration()">
+                <i class="fas fa-undo"></i> Reset Configuration
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Add Component Modal -->
+    <div class="modal" id="addComponentModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add New <span id="modalCategoryTitle"></span></h3>
+          <button class="close-modal" onclick="closeAddComponentModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="modalComponentName">Component Name</label>
+            <input
+              type="text"
+              id="modalComponentName"
+              placeholder="Enter component name"
+              required
+              oninput="validateModalForm()"
+            />
+          </div>
+          <div class="form-group">
+            <label for="modalDescription">Description</label>
+            <textarea
+              id="modalDescription"
+              placeholder="Enter component description"
+              required
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="modalUnitPrice">Unit Price (₹)</label>
+            <input
+              type="number"
+              id="modalUnitPrice"
+              step="0.01"
+              min="0"
+              value="0"
+              required
+              oninput="validateModalForm()"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-primary"
+            id="modalAddButton"
+            onclick="addComponentFromModal()"
+            disabled
+          >
+            <i class="fas fa-plus"></i> Add Component
+          </button>
+          <button class="btn btn-secondary" onclick="closeAddComponentModal()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
